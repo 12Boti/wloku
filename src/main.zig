@@ -30,6 +30,36 @@ const Sprite = struct {
     }
 };
 
+const Gamepad = struct {
+    v: u32,
+
+    fn left(self: Gamepad) bool {
+        return self.v & w4.BUTTON_LEFT != 0;
+    }
+    fn right(self: Gamepad) bool {
+        return self.v & w4.BUTTON_RIGHT != 0;
+    }
+    fn up(self: Gamepad) bool {
+        return self.v & w4.BUTTON_UP != 0;
+    }
+    fn down(self: Gamepad) bool {
+        return self.v & w4.BUTTON_DOWN != 0;
+    }
+
+    fn pad1() Gamepad {
+        return .{ .v = w4.GAMEPAD1.* };
+    }
+    fn pad2() Gamepad {
+        return .{ .v = w4.GAMEPAD2.* };
+    }
+    fn pad3() Gamepad {
+        return .{ .v = w4.GAMEPAD3.* };
+    }
+    fn pad4() Gamepad {
+        return .{ .v = w4.GAMEPAD4.* };
+    }
+};
+
 const tank = Sprite.load("tank");
 const tankspeed = 0.5;
 var playerx: f32 = 10;
@@ -41,22 +71,22 @@ export fn update() void {
     w4.DRAW_COLORS.* = 2;
     w4.text("Hello from Zig!", 10, 10);
 
-    const gamepad = w4.GAMEPAD1.*;
+    const pad = Gamepad.pad1();
     if (playervy == 0) {
         playervx = 0;
-        if (gamepad & w4.BUTTON_LEFT != 0) {
+        if (pad.left()) {
             playervx -= tankspeed;
         }
-        if (gamepad & w4.BUTTON_RIGHT != 0) {
+        if (pad.right()) {
             playervx += tankspeed;
         }
     }
     if (playervx == 0) {
         playervy = 0;
-        if (gamepad & w4.BUTTON_UP != 0) {
+        if (pad.up()) {
             playervy -= tankspeed;
         }
-        if (gamepad & w4.BUTTON_DOWN != 0) {
+        if (pad.down()) {
             playervy += tankspeed;
         }
     }
