@@ -1,3 +1,4 @@
 set -eu
 mkdir -p build/assets
-png-decoder assets/tank.png build/assets/tank
+find assets -name '*.png' | xargs -i env f={} sh -c \
+    'png-decoder $f build/assets/$(basename ${f%.png})'
