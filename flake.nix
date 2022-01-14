@@ -6,14 +6,16 @@
     devshell.url = "github:numtide/devshell";
     zigSrc.url = "github:ziglang/zig";
     zigSrc.flake = false;
+    gitignore.url = "github:hercules-ci/gitignore.nix";
   };
 
-  outputs = { self, nixpkgs, devshell, zigSrc, utils }:
+  outputs = { self, nixpkgs, devshell, zigSrc, utils, gitignore }:
     utils.lib.eachDefaultSystem (
       system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
         inherit (devshell.legacyPackages.${system}) mkShell;
+        inherit (gitignore.lib) gitignoreSource;
       in
       rec {
         devShell =
@@ -23,6 +25,20 @@
               wasm4
             ];
           };
+
+        packages.wloku = pkgs.stdenv.mkDerivation {
+          pname = "wloku";
+          version = "0.0.1";
+          src = gitignoreSource ./.;
+          buildPhase = ''
+            HOME=. . bs/build.sh
+          '';
+          installPhase = ''
+            install -Dm644 zig-out/lib/cart.wasm $out/lib/cart.wasm
+          '';
+          nativeBuildInputs = with packages; [ zig-master ];
+        };
+
         packages.zig-master =
           pkgs.zig.overrideAttrs (_: { src = zigSrc; });
 
