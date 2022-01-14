@@ -36,6 +36,7 @@
               png-decoder
               pkgs.wabt
               pkgs.entr
+              pkgs.binaryen
             ];
           };
 
@@ -51,7 +52,11 @@
           installPhase = ''
             install -Dm644 build/lib/cart.wasm $out/lib/cart.wasm
           '';
-          nativeBuildInputs = with packages; [ zig-master png-decoder ];
+          nativeBuildInputs = with packages; [
+            zig-master
+            png-decoder
+            pkgs.binaryen
+          ];
         };
 
         packages.png-decoder = pkgs.stdenv.mkDerivation {
