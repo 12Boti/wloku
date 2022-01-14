@@ -7,9 +7,19 @@
     zigSrc.url = "github:ziglang/zig";
     zigSrc.flake = false;
     gitignore.url = "github:hercules-ci/gitignore.nix";
+    lodepng.url = "github:lvandeve/lodepng";
+    lodepng.flake = false;
   };
 
-  outputs = { self, nixpkgs, devshell, zigSrc, utils, gitignore }:
+  outputs =
+    { self
+    , nixpkgs
+    , devshell
+    , zigSrc
+    , utils
+    , gitignore
+    , lodepng
+    }:
     utils.lib.eachDefaultSystem (
       system:
       let
@@ -23,8 +33,11 @@
             packages = with packages; [
               zig-master
               wasm4
+              png-decoder
             ];
           };
+
+        defaultPackage = packages.wloku;
 
         packages.wloku = pkgs.stdenv.mkDerivation {
           pname = "wloku";
@@ -34,7 +47,22 @@
             HOME=. . bs/build.sh
           '';
           installPhase = ''
-            install -Dm644 zig-out/lib/cart.wasm $out/lib/cart.wasm
+            install -Dm644 build/lib/cart.wasm $out/lib/cart.wasm
+          '';
+          nativeBuildInputs = with packages; [ zig-master png-decoder ];
+        };
+
+        packages.png-decoder = pkgs.stdenv.mkDerivation {
+          name = "png-decoder";
+          src = ./src/png-decode.zig;
+          dontUnpack = true;
+          installPhase = ''
+            mkdir deps
+            cp ${lodepng}/lodepng.h deps
+            cp ${lodepng}/lodepng.cpp deps/lodepng.c
+            mkdir -p $out/bin
+            HOME=. zig build-exe -femit-bin=$out/bin/png-decoder \
+              -lc -I deps deps/lodepng.c $src
           '';
           nativeBuildInputs = with packages; [ zig-master ];
         };

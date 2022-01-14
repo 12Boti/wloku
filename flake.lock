@@ -33,6 +33,22 @@
         "type": "github"
       }
     },
+    "lodepng": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1641772872,
+        "narHash": "sha256-dD8QoyOoGov6VENFNTXWRmen4nYYleoZ8+4TpICNSpo=",
+        "owner": "lvandeve",
+        "repo": "lodepng",
+        "rev": "5601b8272a6850b7c5d693dd0c0e16da50be8d8d",
+        "type": "github"
+      },
+      "original": {
+        "owner": "lvandeve",
+        "repo": "lodepng",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1632846328,
@@ -65,6 +81,7 @@
       "inputs": {
         "devshell": "devshell",
         "gitignore": "gitignore",
+        "lodepng": "lodepng",
         "nixpkgs": "nixpkgs_2",
         "utils": "utils",
         "zigSrc": "zigSrc"

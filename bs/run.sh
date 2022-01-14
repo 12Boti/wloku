@@ -1,3 +1,3 @@
 set -eu
 bash bs/build.sh
-w4 run zig-out/lib/cart.wasm
+w4 run build/lib/cart.wasm
