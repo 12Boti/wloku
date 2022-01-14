@@ -1,1 +1,2 @@
-zig build -Drelease-small=true
+set -eu
+zig build
