@@ -34,24 +34,34 @@ const tank = Sprite.load("tank");
 const tankspeed = 0.5;
 var playerx: f32 = 10;
 var playery: f32 = 70;
+var playervx: f32 = 0;
+var playervy: f32 = 0;
 
 export fn update() void {
     w4.DRAW_COLORS.* = 2;
     w4.text("Hello from Zig!", 10, 10);
 
     const gamepad = w4.GAMEPAD1.*;
-    if (gamepad & w4.BUTTON_LEFT != 0) {
-        playerx -= tankspeed;
+    if (playervy == 0) {
+        playervx = 0;
+        if (gamepad & w4.BUTTON_LEFT != 0) {
+            playervx -= tankspeed;
+        }
+        if (gamepad & w4.BUTTON_RIGHT != 0) {
+            playervx += tankspeed;
+        }
     }
-    if (gamepad & w4.BUTTON_RIGHT != 0) {
-        playerx += tankspeed;
+    if (playervx == 0) {
+        playervy = 0;
+        if (gamepad & w4.BUTTON_UP != 0) {
+            playervy -= tankspeed;
+        }
+        if (gamepad & w4.BUTTON_DOWN != 0) {
+            playervy += tankspeed;
+        }
     }
-    if (gamepad & w4.BUTTON_UP != 0) {
-        playery -= tankspeed;
-    }
-    if (gamepad & w4.BUTTON_DOWN != 0) {
-        playery += tankspeed;
-    }
+    playerx += playervx;
+    playery += playervy;
 
     tank.draw(@floatToInt(u32, playerx), @floatToInt(u32, playery));
 }
