@@ -34,6 +34,8 @@
               zig-master
               wasm4
               png-decoder
+              pkgs.wabt
+              pkgs.entr
             ];
           };
 
