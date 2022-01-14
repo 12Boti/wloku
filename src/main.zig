@@ -15,13 +15,37 @@ const Sprite = struct {
     }
 
     fn draw(s: Sprite, x: u32, y: u32) void {
+        drawRotated(s, x, y, 0);
+    }
+
+    fn drawRotated(s: Sprite, x: u32, y: u32, rot: u2) void {
         var dy: u32 = 0;
         while (dy < s.h) : (dy += 1) {
             var dx: u32 = 0;
             while (dx < s.w) : (dx += 1) {
                 const pix = s.data[dx + dy * s.w];
                 if (pix == 0) continue;
-                const idx = x + dx + (y + dy) * w4.CANVAS_SIZE;
+                var px: u32 = undefined;
+                var py: u32 = undefined;
+                switch (rot) {
+                    0 => {
+                        px = dx;
+                        py = dy;
+                    },
+                    1 => {
+                        px = dy;
+                        py = s.w - dx - 1;
+                    },
+                    2 => {
+                        px = s.w - dx - 1;
+                        py = s.h - dy - 1;
+                    },
+                    3 => {
+                        px = s.h - dy - 1;
+                        py = dx;
+                    },
+                }
+                const idx = x + px + (y + py) * w4.CANVAS_SIZE;
                 const off = @intCast(u3, idx % 4) * 2;
                 w4.FRAMEBUFFER[idx / 4] &= ~(@intCast(u8, 3) << off);
                 w4.FRAMEBUFFER[idx / 4] |= (pix - 1) << off;
@@ -66,6 +90,7 @@ var playerx: f32 = 10;
 var playery: f32 = 70;
 var playervx: f32 = 0;
 var playervy: f32 = 0;
+var playerrot: u2 = 0;
 
 export fn update() void {
     w4.DRAW_COLORS.* = 2;
@@ -92,6 +117,19 @@ export fn update() void {
     }
     playerx += playervx;
     playery += playervy;
+    if (playervy < 0) {
+        playerrot = 0;
+    } else if (playervx < 0) {
+        playerrot = 1;
+    } else if (playervy > 0) {
+        playerrot = 2;
+    } else if (playervx > 0) {
+        playerrot = 3;
+    }
 
-    tank.draw(@floatToInt(u32, playerx), @floatToInt(u32, playery));
+    tank.drawRotated(
+        @floatToInt(u32, playerx),
+        @floatToInt(u32, playery),
+        playerrot,
+    );
 }
