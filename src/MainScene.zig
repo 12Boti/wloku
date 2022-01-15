@@ -5,9 +5,8 @@ const Sprite = @import("Sprite.zig");
 const ArrayVec = @import("ArrayVec.zig").ArrayVec;
 const Noise = @import("Noise.zig");
 
-const wallsSize = 100;
 const wallColor = 3;
-const Walls = std.PackedIntArray(u1, wallsSize * wallsSize);
+const Walls = std.PackedIntArray(u1, w4.CANVAS_SIZE * w4.CANVAS_SIZE);
 const bulletSpeed = 0.8;
 const bulletColor = 1;
 const shootDelay = 60;
@@ -52,11 +51,18 @@ fn generateWalls(s: *Self) void {
     var noise = Noise.init(s.rng.random().int(u64));
     const freq = 0.15;
     var x: usize = 0;
-    while (x < wallsSize) : (x += 1) {
+    while (x < w4.CANVAS_SIZE) : (x += 1) {
         var y: usize = 0;
-        while (y < wallsSize) : (y += 1) {
-            if (noise.get(@intToFloat(f32, x) * freq, @intToFloat(f32, y) * freq) < 0.5) {
-                s.walls.set(x + y * wallsSize, 1);
+        while (y < w4.CANVAS_SIZE) : (y += 1) {
+            const fx = @intToFloat(f32, x);
+            const fy = @intToFloat(f32, y);
+            var v = noise.get(fx * freq, fy * freq);
+            const ds = distSq(f32, fx, fy, s.player1.centerx(), s.player1.centery());
+            if (ds < 500) {
+                v += 1 / ds * 50;
+            }
+            if (v < 0.4) {
+                s.walls.set(x + y * w4.CANVAS_SIZE, 1);
             }
         }
     }
@@ -64,29 +70,31 @@ fn generateWalls(s: *Self) void {
 
 fn drawWalls(s: Self) void {
     var x: usize = 0;
-    while (x < wallsSize) : (x += 1) {
+    while (x < w4.CANVAS_SIZE) : (x += 1) {
         var y: usize = 0;
-        while (y < wallsSize) : (y += 1) {
-            if (s.walls.get(x + y * wallsSize) == 1) {
-                w4.setPixel(x + 30, y + 30, wallColor);
+        while (y < w4.CANVAS_SIZE) : (y += 1) {
+            if (s.walls.get(x + y * w4.CANVAS_SIZE) == 1) {
+                w4.setPixel(x, y, wallColor);
             }
         }
     }
 }
 
-fn explodeWalls(s: *Self, x: u32, y: u32) void {
+fn explodeWalls(s: *Self, x: i32, y: i32) void {
     const radius = 15;
-    var dy: u32 = 0;
+    var dy: i32 = 0;
     while (dy < radius) : (dy += 1) {
-        var dx: u32 = 0;
+        var dx: i32 = 0;
         while (dx < radius) : (dx += 1) {
             const xx = x + dx - radius / 2;
             const yy = y + dy - radius / 2;
-            if (xx < 30 or yy < 30) continue;
-            const idx = xx - 30 + (yy - 30) * wallsSize;
-            if (idx >= s.walls.len) continue;
-            const distSq = (x - xx) * (x - xx) + (y - yy) * (y - yy);
-            if (s.rng.random().float(f32) > @intToFloat(f32, distSq) / radius / radius * 3) {
+            if (xx < 0 or
+                xx >= w4.CANVAS_SIZE or
+                yy < 0 or
+                yy >= w4.CANVAS_SIZE) continue;
+            const idx = @intCast(usize, xx + yy * w4.CANVAS_SIZE);
+            const ds = distSq(i32, x, y, xx, yy);
+            if (s.rng.random().float(f32) > @intToFloat(f32, ds) / radius / radius * 3) {
                 s.walls.set(idx, 0);
             }
         }
@@ -110,8 +118,8 @@ fn updateBullets(s: *Self) void {
             1,
         )) {
             s.explodeWalls(
-                @floatToInt(u32, b.x),
-                @floatToInt(u32, b.y),
+                @floatToInt(i32, b.x),
+                @floatToInt(i32, b.y),
             );
             _ = s.bullets.swapRemove(i);
             continue;
@@ -229,13 +237,16 @@ fn isCollidingWithWalls(s: Self, x: u32, y: u32, w: u32, h: u32) bool {
         while (dx < w) : (dx += 1) {
             const xx = x + dx;
             const yy = y + dy;
-            if (xx < 30 or yy < 30) continue;
-            const idx = xx - 30 + (yy - 30) * wallsSize;
-            if (idx >= s.walls.len) continue;
+            if (xx >= w4.CANVAS_SIZE or yy >= w4.CANVAS_SIZE) continue;
+            const idx = xx + yy * w4.CANVAS_SIZE;
             if (s.walls.get(idx) == 1) return true;
         }
     }
     return false;
+}
+
+fn distSq(comptime T: type, x1: T, y1: T, x2: T, y2: T) T {
+    return (x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2);
 }
 
 const Bullet = struct {
@@ -261,5 +272,13 @@ const Tank = struct {
             @floatToInt(i32, self.y),
             self.rot,
         );
+    }
+
+    fn centerx(self: Tank) f32 {
+        return self.x + @intToFloat(f32, self.sprite.w) / 2;
+    }
+
+    fn centery(self: Tank) f32 {
+        return self.y + @intToFloat(f32, self.sprite.h) / 2;
     }
 };
