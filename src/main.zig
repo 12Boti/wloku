@@ -7,6 +7,7 @@ const Sprite = struct {
 
     fn load(comptime name: []const u8) Sprite {
         const data = @embedFile("../build/assets/" ++ name);
+        // TODO: values could be packed into u3 if smaller cart is needed
         return comptime Sprite{
             .w = data[0],
             .h = data[1],
@@ -48,41 +49,9 @@ const Sprite = struct {
                 if (px < 0 or px >= w4.CANVAS_SIZE or py < 0 or py >= w4.CANVAS_SIZE)
                     continue;
                 const idx = @intCast(usize, x + px + (y + py) * w4.CANVAS_SIZE);
-                const off = @intCast(u3, idx % 4) * 2;
-                w4.FRAMEBUFFER[idx / 4] &= ~(@intCast(u8, 3) << off);
-                w4.FRAMEBUFFER[idx / 4] |= (pix - 1) << off;
+                w4.FRAMEBUFFER.set(idx, @intCast(u2, pix - 1));
             }
         }
-    }
-};
-
-const Gamepad = struct {
-    v: u32,
-
-    fn left(self: Gamepad) bool {
-        return self.v & w4.BUTTON_LEFT != 0;
-    }
-    fn right(self: Gamepad) bool {
-        return self.v & w4.BUTTON_RIGHT != 0;
-    }
-    fn up(self: Gamepad) bool {
-        return self.v & w4.BUTTON_UP != 0;
-    }
-    fn down(self: Gamepad) bool {
-        return self.v & w4.BUTTON_DOWN != 0;
-    }
-
-    fn pad1() Gamepad {
-        return .{ .v = w4.GAMEPAD1.* };
-    }
-    fn pad2() Gamepad {
-        return .{ .v = w4.GAMEPAD2.* };
-    }
-    fn pad3() Gamepad {
-        return .{ .v = w4.GAMEPAD3.* };
-    }
-    fn pad4() Gamepad {
-        return .{ .v = w4.GAMEPAD4.* };
     }
 };
 
@@ -98,7 +67,7 @@ export fn update() void {
     w4.DRAW_COLORS.* = 2;
     w4.text("Hello from Zig!", 10, 10);
 
-    const pad = Gamepad.pad1();
+    const pad = w4.GAMEPAD1;
     if (playervy == 0) {
         playervx = 0;
         if (pad.left()) {
