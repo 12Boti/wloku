@@ -46,10 +46,11 @@ pub fn drawRotated(s: Self, x: i32, y: i32, rot: u2) void {
                     py = dx;
                 },
             }
-            if (px < 0 or px >= w4.CANVAS_SIZE or py < 0 or py >= w4.CANVAS_SIZE)
+            const xx = x + px;
+            const yy = y + py;
+            if (xx < 0 or xx >= w4.CANVAS_SIZE or yy < 0 or yy >= w4.CANVAS_SIZE)
                 continue;
-            const idx = @intCast(usize, x + px + (y + py) * w4.CANVAS_SIZE);
-            w4.FRAMEBUFFER.set(idx, @intCast(u2, pix - 1));
+            w4.setPixel(@intCast(u32, xx), @intCast(u32, yy), @intCast(u2, pix - 1));
         }
     }
 }

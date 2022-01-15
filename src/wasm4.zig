@@ -104,6 +104,11 @@ pub extern fn vline(x: i32, y: i32, len: u32) void;
 /// Draws a horizontal line
 pub extern fn hline(x: i32, y: i32, len: u32) void;
 
+/// Sets a single pixel
+pub fn setPixel(x: u32, y: u32, color: u2) void {
+    FRAMEBUFFER.set(x + y * CANVAS_SIZE, color);
+}
+
 // ┌───────────────────────────────────────────────────────────────────────────┐
 // │                                                                           │
 // │ Sound Functions                                                           │

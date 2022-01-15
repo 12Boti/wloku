@@ -18,7 +18,11 @@ const Scene = union(enum) {
     }
 };
 
-var currentScene = Scene{ .MainScene = MainScene.init() };
+var currentScene: Scene = undefined;
+
+export fn start() void {
+    currentScene = Scene{ .MainScene = MainScene.init() };
+}
 
 export fn update() void {
     currentScene.update();

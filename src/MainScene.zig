@@ -1,19 +1,31 @@
 const Self = @This();
+const std = @import("std");
 const w4 = @import("wasm4.zig");
 const Sprite = @import("Sprite.zig");
 
-player1: Tank,
+const walls_size = 100;
+const walls_color = 3;
+const Walls = std.PackedIntArray(u1, walls_size * walls_size);
+
+player1: Tank = Tank{
+    .x = 10,
+    .y = 70,
+    .vx = 0,
+    .vy = 0,
+    .speed = 0.5,
+    .rot = 0,
+    .sprite = &Sprite.load("tank"),
+},
+// use `std.mem.zeroes` here because it makes compilation much faster than
+// looping and setting all elements to 0
+walls: Walls = std.mem.zeroes(Walls),
+// TODO: gather entropy from player input
+rng: std.rand.DefaultPrng = std.rand.DefaultPrng.init(0xdeadbeef),
 
 pub fn init() Self {
-    return .{ .player1 = .{
-        .x = 10,
-        .y = 70,
-        .vx = 0,
-        .vy = 0,
-        .speed = 0.5,
-        .rot = 0,
-        .sprite = &Sprite.load("tank"),
-    } };
+    var s = Self{};
+    s.generateWalls();
+    return s;
 }
 
 pub fn update(s: *Self) void {
@@ -23,7 +35,32 @@ pub fn update(s: *Self) void {
 pub fn draw(s: Self) void {
     w4.DRAW_COLORS.* = 2;
     w4.text("Hello from Zig!", 10, 10);
+    s.drawWalls();
     s.player1.draw();
+}
+
+fn generateWalls(s: *Self) void {
+    var x: usize = 0;
+    while (x < walls_size) : (x += 1) {
+        var y: usize = 0;
+        while (y < walls_size) : (y += 1) {
+            if (s.rng.random().float(f32) < 0.5) {
+                s.walls.set(x + y * walls_size, 1);
+            }
+        }
+    }
+}
+
+fn drawWalls(s: Self) void {
+    var x: usize = 0;
+    while (x < walls_size) : (x += 1) {
+        var y: usize = 0;
+        while (y < walls_size) : (y += 1) {
+            if (s.walls.get(x + y * walls_size) == 1) {
+                w4.setPixel(x + 30, y + 30, walls_color);
+            }
+        }
+    }
 }
 
 fn updatePlayer(tank: *Tank, pad: w4.Gamepad) void {
