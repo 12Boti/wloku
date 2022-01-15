@@ -1,6 +1,7 @@
 const Self = @This();
 const std = @import("std");
 const hash = @import("rng.zig").hash;
+const distSq = @import("math.zig").distSq;
 
 seed: u64,
 
@@ -25,9 +26,7 @@ pub fn get(s: Self, x: f32, y: f32) f32 {
         while (i <= 2) : (i += 1) {
             const gx = @intToFloat(f32, i);
             const gy = @intToFloat(f32, j);
-            const rx = gx - fx;
-            const ry = gy - fy;
-            const d = rx * rx + ry * ry;
+            const d = distSq(f32, gx, gy, fx, fy);
             const w = 1.0 - smoothstep(0.0, 1.414, @sqrt(d));
             va += w * hash2f(px + gx, py + gy, s.seed);
             wt += w;

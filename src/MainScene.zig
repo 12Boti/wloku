@@ -5,6 +5,7 @@ const Sprite = @import("Sprite.zig");
 const ArrayVec = @import("ArrayVec.zig").ArrayVec;
 const Noise = @import("Noise.zig");
 const rng = @import("rng.zig").rng;
+const distSq = @import("math.zig").distSq;
 
 const wallColor = 3;
 const Walls = std.PackedIntArray(u1, w4.CANVAS_SIZE * w4.CANVAS_SIZE);
@@ -247,10 +248,6 @@ fn isCollidingWithWalls(s: Self, x: i32, y: i32, w: u32, h: u32) bool {
         }
     }
     return false;
-}
-
-fn distSq(comptime T: type, x1: T, y1: T, x2: T, y2: T) T {
-    return (x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2);
 }
 
 fn floorToInt(comptime T: type, x: f32) T {
