@@ -112,14 +112,14 @@ fn updateBullets(s: *Self) void {
             continue;
         }
         if (s.isCollidingWithWalls(
-            @floatToInt(u32, b.x),
-            @floatToInt(u32, b.y),
+            floorToInt(i32, b.x),
+            floorToInt(i32, b.y),
             1,
             1,
         )) {
             s.explodeWalls(
-                @floatToInt(i32, b.x),
-                @floatToInt(i32, b.y),
+                floorToInt(i32, b.x),
+                floorToInt(i32, b.y),
             );
             _ = s.bullets.swapRemove(i);
             continue;
@@ -134,7 +134,7 @@ fn drawBullets(s: Self) void {
         const b = s.bullets.buf[i];
         if (b.x < 0 or b.x >= w4.CANVAS_SIZE or b.y < 0 or b.y >= w4.CANVAS_SIZE)
             continue;
-        w4.setPixel(@floatToInt(u32, b.x), @floatToInt(u32, b.y), bulletColor);
+        w4.setPixel(floorToInt(u32, b.x), floorToInt(u32, b.y), bulletColor);
     }
 }
 
@@ -160,7 +160,7 @@ fn updatePlayer(s: *Self, tank: *Tank, pad: w4.Gamepad) void {
     }
     var newx = tank.x + tank.vx;
     var newy = tank.y + tank.vy;
-    if (!s.isColliding(newx + 1, newy + 1, 5, 5)) {
+    if (!s.isColliding(newx + 2, newy + 2, 3, 3)) {
         tank.x = newx;
         tank.y = newy;
     }
@@ -179,8 +179,8 @@ fn updatePlayer(s: *Self, tank: *Tank, pad: w4.Gamepad) void {
     if (tank.shootTimer == 0 and pad.b1()) {
         tank.shootTimer = shootDelay;
         var bullet = Bullet{
-            .x = tank.x + 3,
-            .y = tank.y + 3,
+            .x = @floor(tank.x) + 3,
+            .y = @floor(tank.y) + 3,
             .vx = 0,
             .vy = 0,
         };
@@ -213,8 +213,8 @@ fn isColliding(s: Self, x: f32, y: f32, w: u32, h: u32) bool {
         return true;
     }
     if (s.isCollidingWithWalls(
-        @floatToInt(u32, x),
-        @floatToInt(u32, y),
+        floorToInt(i32, x),
+        floorToInt(i32, y),
         w,
         h,
     )) {
@@ -230,15 +230,19 @@ fn isOutOfBounds(x: f32, y: f32, w: u32, h: u32) bool {
         y + @intToFloat(f32, h) > w4.CANVAS_SIZE;
 }
 
-fn isCollidingWithWalls(s: Self, x: u32, y: u32, w: u32, h: u32) bool {
-    var dy: u32 = 0;
+fn isCollidingWithWalls(s: Self, x: i32, y: i32, w: u32, h: u32) bool {
+    var dy: i32 = 0;
     while (dy < h) : (dy += 1) {
-        var dx: u32 = 0;
+        var dx: i32 = 0;
         while (dx < w) : (dx += 1) {
             const xx = x + dx;
             const yy = y + dy;
-            if (xx >= w4.CANVAS_SIZE or yy >= w4.CANVAS_SIZE) continue;
-            const idx = xx + yy * w4.CANVAS_SIZE;
+            if (xx < 0 or
+                xx >= w4.CANVAS_SIZE or
+                yy < 0 or
+                yy >= w4.CANVAS_SIZE)
+                continue;
+            const idx = @intCast(usize, xx + yy * w4.CANVAS_SIZE);
             if (s.walls.get(idx) == 1) return true;
         }
     }
@@ -247,6 +251,10 @@ fn isCollidingWithWalls(s: Self, x: u32, y: u32, w: u32, h: u32) bool {
 
 fn distSq(comptime T: type, x1: T, y1: T, x2: T, y2: T) T {
     return (x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2);
+}
+
+fn floorToInt(comptime T: type, x: f32) T {
+    return @floatToInt(T, @floor(x));
 }
 
 const Bullet = struct {
@@ -268,8 +276,8 @@ const Tank = struct {
 
     fn draw(self: Tank) void {
         self.sprite.drawRotated(
-            @floatToInt(i32, self.x),
-            @floatToInt(i32, self.y),
+            floorToInt(i32, self.x),
+            floorToInt(i32, self.y),
             self.rot,
         );
     }
