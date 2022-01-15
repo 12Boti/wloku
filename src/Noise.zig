@@ -29,14 +29,16 @@ pub fn get(s: Self, x: f32, y: f32) f32 {
             const ry = gy - fy;
             const d = rx * rx + ry * ry;
             const w = 1.0 - smoothstep(0.0, 1.414, @sqrt(d));
-            va += w * @intToFloat(f32, hash(
-                ((@as(u64, @bitCast(u32, px + gx)) << 32) |
-                    @bitCast(u32, py + gy)) ^ s.seed,
-            )) / 0xffffffffffffffff;
+            va += w * hash2f(px + gx, py + gy, s.seed);
             wt += w;
         }
     }
     return va / wt;
+}
+
+fn hash2f(x: f32, y: f32, extra: u64) f32 {
+    const p = ((@as(u64, @bitCast(u32, x)) << 32) | @bitCast(u32, y)) ^ extra;
+    return @intToFloat(f32, hash(p)) / std.math.maxInt(u64);
 }
 
 // from https://en.wikipedia.org/wiki/Smoothstep
