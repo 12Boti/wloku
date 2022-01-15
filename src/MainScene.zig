@@ -71,14 +71,45 @@ fn drawWalls(s: Self) void {
     }
 }
 
+fn explodeWalls(s: *Self, x: u32, y: u32) void {
+    const radius = 15;
+    var dy: u32 = 0;
+    while (dy < radius) : (dy += 1) {
+        var dx: u32 = 0;
+        while (dx < radius) : (dx += 1) {
+            const xx = x + dx - radius / 2;
+            const yy = y + dy - radius / 2;
+            if (xx < 30 or yy < 30) continue;
+            const idx = xx - 30 + (yy - 30) * wallsSize;
+            if (idx >= s.walls.len) continue;
+            const distSq = (x - xx) * (x - xx) + (y - yy) * (y - yy);
+            if (s.rng.random().float(f32) > @intToFloat(f32, distSq) / radius / radius * 3) {
+                s.walls.set(idx, 0);
+            }
+        }
+    }
+}
+
 fn updateBullets(s: *Self) void {
     var i: usize = 0;
     while (i < s.bullets.size) {
         const b = &s.bullets.buf[i];
         b.x += b.vx;
         b.y += b.vy;
-        if (s.isColliding(b.x, b.y, 1, 1)) {
-            // TODO: explode
+        if (isOutOfBounds(b.x, b.y, 1, 1)) {
+            _ = s.bullets.swapRemove(i);
+            continue;
+        }
+        if (s.isCollidingWithWalls(
+            @floatToInt(u32, b.x),
+            @floatToInt(u32, b.y),
+            1,
+            1,
+        )) {
+            s.explodeWalls(
+                @floatToInt(u32, b.x),
+                @floatToInt(u32, b.y),
+            );
             _ = s.bullets.swapRemove(i);
             continue;
         }
@@ -167,11 +198,7 @@ fn updatePlayer(s: *Self, tank: *Tank, pad: w4.Gamepad) void {
 }
 
 fn isColliding(s: Self, x: f32, y: f32, w: u32, h: u32) bool {
-    if (x < 0 or
-        x + @intToFloat(f32, w) > w4.CANVAS_SIZE or
-        y < 0 or
-        y + @intToFloat(f32, h) > w4.CANVAS_SIZE)
-    {
+    if (isOutOfBounds(x, y, w, h)) {
         return true;
     }
     if (s.isCollidingWithWalls(
@@ -183,6 +210,13 @@ fn isColliding(s: Self, x: f32, y: f32, w: u32, h: u32) bool {
         return true;
     }
     return false;
+}
+
+fn isOutOfBounds(x: f32, y: f32, w: u32, h: u32) bool {
+    return x < 0 or
+        x + @intToFloat(f32, w) > w4.CANVAS_SIZE or
+        y < 0 or
+        y + @intToFloat(f32, h) > w4.CANVAS_SIZE;
 }
 
 fn isCollidingWithWalls(s: Self, x: u32, y: u32, w: u32, h: u32) bool {
