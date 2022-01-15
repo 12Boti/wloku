@@ -1,5 +1,6 @@
 const std = @import("std");
 const w4 = @import("wasm4.zig");
+const rng = @import("rng.zig");
 const MainScene = @import("MainScene.zig");
 
 const Scene = union(enum) {
@@ -25,5 +26,6 @@ export fn start() void {
 }
 
 export fn update() void {
+    rng.update();
     currentScene.update();
 }

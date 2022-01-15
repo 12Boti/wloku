@@ -1,5 +1,6 @@
 const Self = @This();
 const std = @import("std");
+const hash = @import("rng.zig").hash;
 
 seed: u64,
 
@@ -28,27 +29,14 @@ pub fn get(s: Self, x: f32, y: f32) f32 {
             const ry = gy - fy;
             const d = rx * rx + ry * ry;
             const w = 1.0 - smoothstep(0.0, 1.414, @sqrt(d));
-            va += w * @intToFloat(f32, s.hash(
-                (@as(u64, @bitCast(u32, px + gx)) << 32) |
-                    @bitCast(u32, py + gy),
+            va += w * @intToFloat(f32, hash(
+                ((@as(u64, @bitCast(u32, px + gx)) << 32) |
+                    @bitCast(u32, py + gy)) ^ s.seed,
             )) / 0xffffffffffffffff;
             wt += w;
         }
     }
     return va / wt;
-}
-
-// based on https://stackoverflow.com/a/70620975
-fn hash(s: Self, x: u64) u64 {
-    var r = x ^ s.seed;
-    r ^= r >> 17;
-    r *= 0xed5ad4bbac4c1b51;
-    r ^= r >> 11;
-    r *= 0xac4c1b5131848bab;
-    r ^= r >> 15;
-    r *= 0x31848babed5ad4bb;
-    r ^= r >> 14;
-    return r;
 }
 
 // from https://en.wikipedia.org/wiki/Smoothstep

@@ -4,6 +4,7 @@ const w4 = @import("wasm4.zig");
 const Sprite = @import("Sprite.zig");
 const ArrayVec = @import("ArrayVec.zig").ArrayVec;
 const Noise = @import("Noise.zig");
+const rng = @import("rng.zig").rng;
 
 const wallColor = 3;
 const Walls = std.PackedIntArray(u1, w4.CANVAS_SIZE * w4.CANVAS_SIZE);
@@ -25,8 +26,6 @@ player1: Tank = Tank{
 // looping and setting all elements to 0
 walls: Walls = std.mem.zeroes(Walls),
 bullets: ArrayVec(Bullet, 128) = .{},
-// TODO: gather entropy from player input
-rng: std.rand.DefaultPrng = std.rand.DefaultPrng.init(0xdeadbeef),
 
 pub fn init() Self {
     var s = Self{};
@@ -48,7 +47,7 @@ pub fn draw(s: Self) void {
 }
 
 fn generateWalls(s: *Self) void {
-    var noise = Noise.init(s.rng.random().int(u64));
+    var noise = Noise.init(rng.int(u64));
     const freq = 0.15;
     var x: usize = 0;
     while (x < w4.CANVAS_SIZE) : (x += 1) {
@@ -95,7 +94,7 @@ fn explodeWalls(s: *Self, x: i32, y: i32) void {
             const idx = @intCast(usize, xx + yy * w4.CANVAS_SIZE);
             const ds = distSq(i32, x, y, xx, yy);
             const v = @intToFloat(f32, ds) / radius / radius * 6 - 0.2;
-            if (s.rng.random().float(f32) > v) {
+            if (rng.float(f32) > v) {
                 s.walls.set(idx, 0);
             }
         }
