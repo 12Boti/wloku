@@ -8,8 +8,13 @@ const Scene = union(enum) {
     fn update(self: *Scene) void {
         // waiting for https://github.com/ziglang/zig/issues/7224
         switch (self.*) {
-            .MainScene => |*s| s.update(),
+            .MainScene => |*s| updateAndDraw(s),
         }
+    }
+
+    fn updateAndDraw(s: anytype) void {
+        s.update();
+        s.draw();
     }
 };
 

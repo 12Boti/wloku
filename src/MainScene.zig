@@ -17,11 +17,12 @@ pub fn init() Self {
 }
 
 pub fn update(s: *Self) void {
+    updatePlayer(&s.player1, w4.GAMEPAD1.*);
+}
+
+pub fn draw(s: Self) void {
     w4.DRAW_COLORS.* = 2;
     w4.text("Hello from Zig!", 10, 10);
-
-    updatePlayer(&s.player1, w4.GAMEPAD1.*);
-
     s.player1.draw();
 }
 
