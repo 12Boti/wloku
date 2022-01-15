@@ -75,12 +75,13 @@ fn updateBullets(s: *Self) void {
     var i: usize = 0;
     while (i < s.bullets.size) {
         const b = &s.bullets.buf[i];
-        if (b.x < 0 or b.x >= w4.CANVAS_SIZE or b.y < 0 or b.y >= w4.CANVAS_SIZE) {
+        b.x += b.vx;
+        b.y += b.vy;
+        if (s.isColliding(b.x, b.y, 1, 1)) {
+            // TODO: explode
             _ = s.bullets.swapRemove(i);
             continue;
         }
-        b.x += b.vx;
-        b.y += b.vy;
         i += 1;
     }
 }
@@ -117,7 +118,7 @@ fn updatePlayer(s: *Self, tank: *Tank, pad: w4.Gamepad) void {
     }
     var newx = tank.x + tank.vx;
     var newy = tank.y + tank.vy;
-    if (!isColliding(newx + 1, newy + 1, 5, 5)) {
+    if (!s.isColliding(newx + 1, newy + 1, 5, 5)) {
         tank.x = newx;
         tank.y = newy;
     }
@@ -165,9 +166,37 @@ fn updatePlayer(s: *Self, tank: *Tank, pad: w4.Gamepad) void {
     }
 }
 
-fn isColliding(x: f32, y: f32, w: f32, h: f32) bool {
-    if (x < 0 or x + w > w4.CANVAS_SIZE or y < 0 or y + h > w4.CANVAS_SIZE) {
+fn isColliding(s: Self, x: f32, y: f32, w: u32, h: u32) bool {
+    if (x < 0 or
+        x + @intToFloat(f32, w) > w4.CANVAS_SIZE or
+        y < 0 or
+        y + @intToFloat(f32, h) > w4.CANVAS_SIZE)
+    {
         return true;
+    }
+    if (s.isCollidingWithWalls(
+        @floatToInt(u32, x),
+        @floatToInt(u32, y),
+        w,
+        h,
+    )) {
+        return true;
+    }
+    return false;
+}
+
+fn isCollidingWithWalls(s: Self, x: u32, y: u32, w: u32, h: u32) bool {
+    var dy: u32 = 0;
+    while (dy < h) : (dy += 1) {
+        var dx: u32 = 0;
+        while (dx < w) : (dx += 1) {
+            const xx = x + dx;
+            const yy = y + dy;
+            if (xx < 30 or yy < 30) continue;
+            const idx = xx - 30 + (yy - 30) * wallsSize;
+            if (idx >= s.walls.len) continue;
+            if (s.walls.get(idx) == 1) return true;
+        }
     }
     return false;
 }
