@@ -3,6 +3,7 @@ const std = @import("std");
 const w4 = @import("wasm4.zig");
 const Sprite = @import("Sprite.zig");
 const ArrayVec = @import("ArrayVec.zig").ArrayVec;
+const Noise = @import("Noise.zig");
 
 const wallsSize = 100;
 const wallColor = 3;
@@ -48,11 +49,13 @@ pub fn draw(s: Self) void {
 }
 
 fn generateWalls(s: *Self) void {
+    var noise = Noise.init(s.rng.random().int(u64));
+    const freq = 0.15;
     var x: usize = 0;
     while (x < wallsSize) : (x += 1) {
         var y: usize = 0;
         while (y < wallsSize) : (y += 1) {
-            if (s.rng.random().float(f32) < 0.5) {
+            if (noise.get(@intToFloat(f32, x) * freq, @intToFloat(f32, y) * freq) < 0.5) {
                 s.walls.set(x + y * wallsSize, 1);
             }
         }
