@@ -42,15 +42,7 @@ pub fn get(s: Self, x: f32, y: f32) f32 {
 // from https://en.wikipedia.org/wiki/Smoothstep
 fn smoothstep(edge0: f32, edge1: f32, x: f32) f32 {
     // Scale, bias and saturate x to 0..1 range
-    var xx = clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);
+    var xx = std.math.clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);
     // Evaluate polynomial
     return xx * xx * (3 - 2 * xx);
-}
-
-fn clamp(x: f32, lowerlimit: f32, upperlimit: f32) f32 {
-    if (x < lowerlimit)
-        return lowerlimit;
-    if (x > upperlimit)
-        return upperlimit;
-    return x;
 }
