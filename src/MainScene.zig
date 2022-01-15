@@ -81,7 +81,7 @@ fn drawWalls(s: Self) void {
 }
 
 fn explodeWalls(s: *Self, x: i32, y: i32) void {
-    const radius = 15;
+    const radius = 20;
     var dy: i32 = 0;
     while (dy < radius) : (dy += 1) {
         var dx: i32 = 0;
@@ -94,7 +94,8 @@ fn explodeWalls(s: *Self, x: i32, y: i32) void {
                 yy >= w4.CANVAS_SIZE) continue;
             const idx = @intCast(usize, xx + yy * w4.CANVAS_SIZE);
             const ds = distSq(i32, x, y, xx, yy);
-            if (s.rng.random().float(f32) > @intToFloat(f32, ds) / radius / radius * 3) {
+            const v = @intToFloat(f32, ds) / radius / radius * 6 - 0.2;
+            if (s.rng.random().float(f32) > v) {
                 s.walls.set(idx, 0);
             }
         }
