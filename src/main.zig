@@ -14,19 +14,19 @@ const Sprite = struct {
         };
     }
 
-    fn draw(s: Sprite, x: u32, y: u32) void {
+    fn draw(s: Sprite, x: i32, y: i32) void {
         drawRotated(s, x, y, 0);
     }
 
-    fn drawRotated(s: Sprite, x: u32, y: u32, rot: u2) void {
-        var dy: u32 = 0;
+    fn drawRotated(s: Sprite, x: i32, y: i32, rot: u2) void {
+        var dy: u31 = 0;
         while (dy < s.h) : (dy += 1) {
-            var dx: u32 = 0;
+            var dx: u31 = 0;
             while (dx < s.w) : (dx += 1) {
                 const pix = s.data[dx + dy * s.w];
                 if (pix == 0) continue;
-                var px: u32 = undefined;
-                var py: u32 = undefined;
+                var px: i32 = undefined;
+                var py: i32 = undefined;
                 switch (rot) {
                     0 => {
                         px = dx;
@@ -45,7 +45,9 @@ const Sprite = struct {
                         py = dx;
                     },
                 }
-                const idx = x + px + (y + py) * w4.CANVAS_SIZE;
+                if (px < 0 or px >= w4.CANVAS_SIZE or py < 0 or py >= w4.CANVAS_SIZE)
+                    continue;
+                const idx = @intCast(usize, x + px + (y + py) * w4.CANVAS_SIZE);
                 const off = @intCast(u3, idx % 4) * 2;
                 w4.FRAMEBUFFER[idx / 4] &= ~(@intCast(u8, 3) << off);
                 w4.FRAMEBUFFER[idx / 4] |= (pix - 1) << off;
@@ -115,8 +117,6 @@ export fn update() void {
             playervy += tankspeed;
         }
     }
-    playerx += playervx;
-    playery += playervy;
     if (playervy < 0) {
         playerrot = 0;
     } else if (playervx < 0) {
@@ -126,10 +126,23 @@ export fn update() void {
     } else if (playervx > 0) {
         playerrot = 3;
     }
+    var newx = playerx + playervx;
+    var newy = playery + playervy;
+    if (!isColliding(newx + 1, newy + 1, 5, 5)) {
+        playerx = newx;
+        playery = newy;
+    }
 
     tank.drawRotated(
-        @floatToInt(u32, playerx),
-        @floatToInt(u32, playery),
+        @floatToInt(i32, playerx),
+        @floatToInt(i32, playery),
         playerrot,
     );
+}
+
+fn isColliding(x: f32, y: f32, w: f32, h: f32) bool {
+    if (x < 0 or x + w > w4.CANVAS_SIZE or y < 0 or y + h > w4.CANVAS_SIZE) {
+        return true;
+    }
+    return false;
 }
