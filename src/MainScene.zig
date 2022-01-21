@@ -12,15 +12,17 @@ const bulletSpeed = 0.8;
 const bulletColor = 1;
 const shootDelay = 60;
 
-player1: Tank = Tank{
-    .x = 150,
-    .y = 70,
-    .sprite = &Sprite.load("tank"),
-},
-player2: Tank = Tank{
-    .x = 10,
-    .y = 70,
-    .sprite = &Sprite.load("tank"),
+players: [2]Tank = .{
+    .{
+        .x = 20,
+        .y = 70,
+        .sprite = &Sprite.load("tank"),
+    },
+    .{
+        .x = 10,
+        .y = 70,
+        .sprite = &Sprite.load("tank"),
+    },
 },
 // use `std.mem.zeroes` here because it makes compilation much faster than
 // looping and setting all elements to 0
@@ -34,9 +36,10 @@ pub fn init() Self {
 }
 
 pub fn update(s: *Self) void {
+    for (s.players) |*p, i| {
+        s.updatePlayer(p, w4.GAMEPADS[i]);
+    }
     s.updateBullets();
-    s.updatePlayer(&s.player1, w4.GAMEPAD1.*);
-    s.updatePlayer(&s.player2, w4.GAMEPAD2.*);
 }
 
 pub fn draw(s: Self) void {
@@ -44,8 +47,9 @@ pub fn draw(s: Self) void {
     w4.text("Hello from Zig!", 10, 10);
     s.drawWalls();
     s.drawBullets();
-    s.player1.draw();
-    s.player2.draw();
+    for (s.players) |p| {
+        p.draw();
+    }
 }
 
 fn generateWalls(s: *Self) void {
@@ -58,10 +62,10 @@ fn generateWalls(s: *Self) void {
             const fx = @intToFloat(f32, x);
             const fy = @intToFloat(f32, y);
             var v = noise.get(fx * freq, fy * freq);
-            const ds = std.math.min(
-                distSq(f32, fx, fy, s.player1.centerx(), s.player1.centery()),
-                distSq(f32, fx, fy, s.player2.centerx(), s.player2.centery()),
-            );
+            var ds = std.math.inf_f32;
+            for (s.players) |p| {
+                ds = std.math.min(ds, distSq(f32, fx, fy, p.centerx(), p.centery()));
+            }
             if (ds < 500) {
                 v += 1 / ds * 50;
             }
@@ -129,11 +133,10 @@ fn updateBullets(s: *Self) void {
             _ = s.bullets.swapRemove(i);
             continue;
         }
-        if (bulletIsInsidePlayer(b.*, s.player1)) {
-            s.player1.alive = false;
-        }
-        if (bulletIsInsidePlayer(b.*, s.player2)) {
-            s.player2.alive = false;
+        for (s.players) |*p| {
+            if (bulletIsInsidePlayer(b.*, p.*)) {
+                p.alive = false;
+            }
         }
         i += 1;
     }

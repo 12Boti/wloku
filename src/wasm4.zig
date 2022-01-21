@@ -48,10 +48,7 @@ pub const CANVAS_SIZE = 160;
 
 pub const PALETTE: *[4]u32 = @intToPtr(*[4]u32, 0x04);
 pub const DRAW_COLORS: *u16 = @intToPtr(*u16, 0x14);
-pub const GAMEPAD1 = @intToPtr(*const Gamepad, 0x16);
-pub const GAMEPAD2 = @intToPtr(*const Gamepad, 0x17);
-pub const GAMEPAD3 = @intToPtr(*const Gamepad, 0x18);
-pub const GAMEPAD4 = @intToPtr(*const Gamepad, 0x19);
+pub const GAMEPADS = @intToPtr(*const [4]Gamepad, 0x16);
 pub const MOUSE_X: *const i16 = @intToPtr(*const i16, 0x1a);
 pub const MOUSE_Y: *const i16 = @intToPtr(*const i16, 0x1c);
 pub const MOUSE_BUTTONS: *const u8 = @intToPtr(*const u8, 0x1e);

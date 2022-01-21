@@ -7,11 +7,11 @@ pub const rng = rng_impl.random();
 
 pub fn update() void {
     // gather entropy from player inputs
-    if (w4.GAMEPAD1.v != 0) {
-        rng_impl.s[0] = hash(rng_impl.s[0] ^ w4.GAMEPAD1.v ^ (frame << 10));
+    if (w4.GAMEPADS[0].v != 0) {
+        rng_impl.s[0] = hash(rng_impl.s[0] ^ w4.GAMEPADS[0].v ^ (frame << 10));
     }
-    if (w4.GAMEPAD2.v != 0) {
-        rng_impl.s[2] = hash(rng_impl.s[2] ^ (@as(u64, w4.GAMEPAD1.v) << 35) ^ (frame << 24));
+    if (w4.GAMEPADS[1].v != 0) {
+        rng_impl.s[2] = hash(rng_impl.s[2] ^ (@as(u64, w4.GAMEPADS[0].v) << 35) ^ (frame << 24));
     }
     frame +%= 1;
 }
