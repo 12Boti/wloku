@@ -11,45 +11,94 @@ const Walls = std.PackedIntArray(u1, w4.CANVAS_SIZE * w4.CANVAS_SIZE);
 const bulletSpeed = 0.8;
 const bulletColor = 1;
 const shootDelay = 60;
+const tankSprite = Sprite.load("tank");
+const startingPos = [_](struct { x: f32, y: f32 }){
+    .{ .x = 145, .y = 70 },
+    .{ .x = 10, .y = 70 },
+};
 
-players: [2]Tank = .{
-    .{
-        .x = 20,
-        .y = 70,
-        .sprite = &Sprite.load("tank"),
-    },
-    .{
-        .x = 10,
-        .y = 70,
-        .sprite = &Sprite.load("tank"),
-    },
-},
+players: [2]Tank = undefined,
 // use `std.mem.zeroes` here because it makes compilation much faster than
 // looping and setting all elements to 0
 walls: Walls = std.mem.zeroes(Walls),
 bullets: std.BoundedArray(Bullet, 128) = .{},
+finishedSince: u32 = 0,
+overlayText: []const u8 = undefined,
+textBuf: [20]u8 = undefined,
 
 pub fn init() Self {
     var s = Self{};
+    s.resetPlayers();
     s.generateWalls();
     return s;
 }
 
 pub fn update(s: *Self) void {
+    if (s.finishedSince > 0) {
+        s.finishedSince += 1;
+        if (s.finishedSince > 3 * 60) {
+            s.finishedSince = 0;
+            s.bullets.len = 0;
+            s.resetPlayers();
+            s.walls = std.mem.zeroes(Walls);
+            s.generateWalls();
+        } else {
+            return;
+        }
+    }
+
     for (s.players) |*p, i| {
         s.updatePlayer(p, w4.GAMEPADS[i]);
     }
     s.updateBullets();
+
+    var alivePlayers: u8 = 0;
+    var lastAlive: u8 = undefined;
+    for (s.players) |p, i| {
+        if (p.alive) {
+            alivePlayers += 1;
+            lastAlive = @intCast(u8, i);
+        }
+    }
+    if (alivePlayers == 0) {
+        s.finishedSince = 1;
+        s.overlayText = "Draw!";
+    } else if (alivePlayers == 1) {
+        s.finishedSince = 1;
+        s.overlayText = std.fmt.bufPrint(
+            &s.textBuf,
+            "Player {} won!",
+            .{lastAlive + 1},
+        ) catch unreachable;
+    }
 }
 
 pub fn draw(s: Self) void {
-    w4.DRAW_COLORS.* = 2;
-    w4.text("Hello from Zig!", 10, 10);
     s.drawWalls();
     s.drawBullets();
     for (s.players) |p| {
         p.draw();
     }
+    if (s.finishedSince > 0) {
+        w4.DRAW_COLORS.* = 1;
+        w4.rect(5, 55, 120, 18);
+        w4.DRAW_COLORS.* = 2;
+        w4.text(s.overlayText, 10, 60);
+    }
+}
+
+fn resetPlayers(s: *Self) void {
+    for (s.players) |*p, i| {
+        p.* = createPlayer(@intCast(u8, i));
+    }
+}
+
+fn createPlayer(idx: u8) Tank {
+    return .{
+        .x = startingPos[idx].x,
+        .y = startingPos[idx].y,
+        .sprite = &tankSprite,
+    };
 }
 
 fn generateWalls(s: *Self) void {
