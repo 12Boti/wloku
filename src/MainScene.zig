@@ -157,6 +157,7 @@ fn explodeWalls(s: *Self, x: i32, y: i32) void {
             }
         }
     }
+    playExplosionSound();
 }
 
 fn updateBullets(s: *Self) void {
@@ -185,6 +186,7 @@ fn updateBullets(s: *Self) void {
         for (s.players) |*p| {
             if (bulletIsInsidePlayer(b.*, p.*)) {
                 p.alive = false;
+                playExplosionSound();
             }
         }
         i += 1;
@@ -322,6 +324,10 @@ fn isCollidingWithWalls(s: Self, x: i32, y: i32, w: u32, h: u32) bool {
 
 fn floorToInt(comptime T: type, x: f32) T {
     return @floatToInt(T, @floor(x));
+}
+
+fn playExplosionSound() void {
+    w4.tone(rng.intRangeAtMostBiased(u32, 400, 450), 20 << 8, 100, 3);
 }
 
 const Bullet = struct {
