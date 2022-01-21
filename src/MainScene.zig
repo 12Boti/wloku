@@ -129,8 +129,21 @@ fn updateBullets(s: *Self) void {
             _ = s.bullets.swapRemove(i);
             continue;
         }
+        if (bulletIsInsidePlayer(b.*, s.player1)) {
+            s.player1.alive = false;
+        }
+        if (bulletIsInsidePlayer(b.*, s.player2)) {
+            s.player2.alive = false;
+        }
         i += 1;
     }
+}
+
+fn bulletIsInsidePlayer(b: Bullet, t: Tank) bool {
+    return b.x - t.x > 1 and
+        b.x - t.x <= 4 and
+        b.y - t.y > 1 and
+        b.y - t.y <= 4;
 }
 
 fn drawBullets(s: Self) void {
@@ -144,6 +157,7 @@ fn drawBullets(s: Self) void {
 }
 
 fn updatePlayer(s: *Self, tank: *Tank, pad: w4.Gamepad) void {
+    if (tank.alive == false) return;
     // movement
     if (tank.vy == 0) {
         tank.vx = 0;
@@ -273,14 +287,17 @@ const Tank = struct {
     speed: f32 = 0.5,
     rot: u2 = 0,
     shootTimer: u32 = 0,
+    alive: bool = true,
     sprite: *const Sprite,
 
     fn draw(self: Tank) void {
-        self.sprite.drawRotated(
-            floorToInt(i32, self.x),
-            floorToInt(i32, self.y),
-            self.rot,
-        );
+        if (self.alive) {
+            self.sprite.drawRotated(
+                floorToInt(i32, self.x),
+                floorToInt(i32, self.y),
+                self.rot,
+            );
+        }
     }
 
     fn centerx(self: Tank) f32 {
