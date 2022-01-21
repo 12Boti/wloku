@@ -13,13 +13,13 @@ const bulletColor = 1;
 const shootDelay = 60;
 
 player1: Tank = Tank{
+    .x = 150,
+    .y = 70,
+    .sprite = &Sprite.load("tank"),
+},
+player2: Tank = Tank{
     .x = 10,
     .y = 70,
-    .vx = 0,
-    .vy = 0,
-    .speed = 0.5,
-    .rot = 0,
-    .shootTimer = 0,
     .sprite = &Sprite.load("tank"),
 },
 // use `std.mem.zeroes` here because it makes compilation much faster than
@@ -36,6 +36,7 @@ pub fn init() Self {
 pub fn update(s: *Self) void {
     s.updateBullets();
     s.updatePlayer(&s.player1, w4.GAMEPAD1.*);
+    s.updatePlayer(&s.player2, w4.GAMEPAD2.*);
 }
 
 pub fn draw(s: Self) void {
@@ -44,6 +45,7 @@ pub fn draw(s: Self) void {
     s.drawWalls();
     s.drawBullets();
     s.player1.draw();
+    s.player2.draw();
 }
 
 fn generateWalls(s: *Self) void {
@@ -56,7 +58,10 @@ fn generateWalls(s: *Self) void {
             const fx = @intToFloat(f32, x);
             const fy = @intToFloat(f32, y);
             var v = noise.get(fx * freq, fy * freq);
-            const ds = distSq(f32, fx, fy, s.player1.centerx(), s.player1.centery());
+            const ds = std.math.min(
+                distSq(f32, fx, fy, s.player1.centerx(), s.player1.centery()),
+                distSq(f32, fx, fy, s.player2.centerx(), s.player2.centery()),
+            );
             if (ds < 500) {
                 v += 1 / ds * 50;
             }
@@ -263,11 +268,11 @@ const Bullet = struct {
 const Tank = struct {
     x: f32,
     y: f32,
-    vx: f32,
-    vy: f32,
-    speed: f32,
-    rot: u2,
-    shootTimer: u32,
+    vx: f32 = 0,
+    vy: f32 = 0,
+    speed: f32 = 0.5,
+    rot: u2 = 0,
+    shootTimer: u32 = 0,
     sprite: *const Sprite,
 
     fn draw(self: Tank) void {
