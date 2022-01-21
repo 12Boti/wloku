@@ -2,7 +2,6 @@ const Self = @This();
 const std = @import("std");
 const w4 = @import("wasm4.zig");
 const Sprite = @import("Sprite.zig");
-const ArrayVec = @import("ArrayVec.zig").ArrayVec;
 const Noise = @import("Noise.zig");
 const rng = @import("rng.zig").rng;
 const distSq = @import("math.zig").distSq;
@@ -26,7 +25,7 @@ player1: Tank = Tank{
 // use `std.mem.zeroes` here because it makes compilation much faster than
 // looping and setting all elements to 0
 walls: Walls = std.mem.zeroes(Walls),
-bullets: ArrayVec(Bullet, 128) = .{},
+bullets: std.BoundedArray(Bullet, 128) = .{},
 
 pub fn init() Self {
     var s = Self{};
@@ -104,8 +103,8 @@ fn explodeWalls(s: *Self, x: i32, y: i32) void {
 
 fn updateBullets(s: *Self) void {
     var i: usize = 0;
-    while (i < s.bullets.size) {
-        const b = &s.bullets.buf[i];
+    while (i < s.bullets.len) {
+        const b = &s.bullets.slice()[i];
         b.x += b.vx;
         b.y += b.vy;
         if (isOutOfBounds(b.x, b.y, 1, 1)) {
@@ -131,8 +130,8 @@ fn updateBullets(s: *Self) void {
 
 fn drawBullets(s: Self) void {
     var i: usize = 0;
-    while (i < s.bullets.size) : (i += 1) {
-        const b = s.bullets.buf[i];
+    while (i < s.bullets.len) : (i += 1) {
+        const b = s.bullets.get(i);
         if (b.x < 0 or b.x >= w4.CANVAS_SIZE or b.y < 0 or b.y >= w4.CANVAS_SIZE)
             continue;
         w4.setPixel(floorToInt(u32, b.x), floorToInt(u32, b.y), bulletColor);
