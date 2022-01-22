@@ -26,9 +26,10 @@ finishedSince: u32 = 0,
 overlayText: []const u8 = undefined,
 textBuf: [20]u8 = undefined,
 startedSince: u32 = 0,
+playSounds: bool,
 
-pub fn init() Self {
-    var s = Self{};
+pub fn init(playSounds: bool) Self {
+    var s = Self{ .playSounds = playSounds };
     s.resetPlayers();
     s.generateWalls();
     return s;
@@ -172,8 +173,8 @@ fn explodeWalls(s: *Self, x: i32, y: i32) void {
             }
         }
     }
-    s.removeSmallBits(x - radius/2 - 1, y - radius/2 - 1, radius + 2, radius + 2);
-    playExplosionSound();
+    s.removeSmallBits(x - radius / 2 - 1, y - radius / 2 - 1, radius + 2, radius + 2);
+    s.playExplosionSound();
 }
 
 fn updateBullets(s: *Self) void {
@@ -202,7 +203,7 @@ fn updateBullets(s: *Self) void {
         for (s.players) |*p| {
             if (bulletIsInsidePlayer(b.*, p.*)) {
                 p.alive = false;
-                playExplosionSound();
+                s.playExplosionSound();
             }
         }
         i += 1;
@@ -342,7 +343,8 @@ fn floorToInt(comptime T: type, x: f32) T {
     return @floatToInt(T, @floor(x));
 }
 
-fn playExplosionSound() void {
+fn playExplosionSound(s: Self) void {
+    if (s.playSounds == false) return;
     w4.tone(rng.intRangeAtMostBiased(u32, 400, 450), 20 << 8, 100, 3);
 }
 
