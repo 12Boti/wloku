@@ -137,6 +137,7 @@ fn generateWalls(s: *Self) void {
             }
         }
     }
+    s.removeSmallBits(0, 0, w4.CANVAS_SIZE, w4.CANVAS_SIZE);
 }
 
 fn drawWalls(s: Self) void {
@@ -171,6 +172,7 @@ fn explodeWalls(s: *Self, x: i32, y: i32) void {
             }
         }
     }
+    s.removeSmallBits(x - radius/2 - 1, y - radius/2 - 1, radius + 2, radius + 2);
     playExplosionSound();
 }
 
@@ -342,6 +344,42 @@ fn floorToInt(comptime T: type, x: f32) T {
 
 fn playExplosionSound() void {
     w4.tone(rng.intRangeAtMostBiased(u32, 400, 450), 20 << 8, 100, 3);
+}
+
+fn removeSmallBits(s: *Self, x: i32, y: i32, w: u32, h: u32) void {
+    var dy: i32 = 0;
+    while (dy < h) : (dy += 1) {
+        var dx: i32 = 0;
+        while (dx < w) : (dx += 1) {
+            const xx = x + dx;
+            const yy = y + dy;
+            if (xx < 0 or
+                xx >= w4.CANVAS_SIZE or
+                yy < 0 or
+                yy >= w4.CANVAS_SIZE or
+                s.walls.get(@intCast(u32, xx) + @intCast(u32, yy) * w4.CANVAS_SIZE) == 0)
+                continue;
+            var neighbours: u8 = 0;
+            for ([_]i8{ -1, 0, 1 }) |u| {
+                for ([_]i8{ -1, 0, 1 }) |v| {
+                    if (u == 0 and v == 0) continue;
+                    const xxx = xx + u;
+                    const yyy = yy + v;
+                    if (xxx < 0 or
+                        xxx >= w4.CANVAS_SIZE or
+                        yyy < 0 or
+                        yyy >= w4.CANVAS_SIZE)
+                        continue;
+                    if (s.walls.get(@intCast(u32, xxx) + @intCast(u32, yyy) * w4.CANVAS_SIZE) == 1) {
+                        neighbours += 1;
+                    }
+                }
+            }
+            if (neighbours < 2) {
+                s.walls.set(@intCast(u32, xx) + @intCast(u32, yy) * w4.CANVAS_SIZE, 0);
+            }
+        }
+    }
 }
 
 const Bullet = struct {
