@@ -25,6 +25,7 @@ bullets: std.BoundedArray(Bullet, 128) = .{},
 finishedSince: u32 = 0,
 overlayText: []const u8 = undefined,
 textBuf: [20]u8 = undefined,
+startedSince: u32 = 0,
 
 pub fn init() Self {
     var s = Self{};
@@ -34,6 +35,7 @@ pub fn init() Self {
 }
 
 pub fn update(s: *Self) void {
+    s.startedSince += 1;
     if (s.finishedSince > 0) {
         s.finishedSince += 1;
         if (s.finishedSince > 3 * 60) {
@@ -42,6 +44,7 @@ pub fn update(s: *Self) void {
             s.resetPlayers();
             s.walls = std.mem.zeroes(Walls);
             s.generateWalls();
+            s.startedSince = 0;
         } else {
             return;
         }
@@ -74,6 +77,17 @@ pub fn update(s: *Self) void {
 }
 
 pub fn draw(s: Self) void {
+    if (s.startedSince < 3 * 60) {
+        for (startingPos) |p, i| {
+            var buf: [2]u8 = undefined;
+            w4.DRAW_COLORS.* = 2;
+            w4.text(
+                std.fmt.bufPrint(&buf, "P{}", .{i + 1}) catch unreachable,
+                floorToInt(i32, p.x - 3),
+                floorToInt(i32, p.y + 10),
+            );
+        }
+    }
     s.drawWalls();
     s.drawBullets();
     for (s.players) |p| {
