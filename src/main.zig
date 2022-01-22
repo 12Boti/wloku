@@ -22,11 +22,16 @@ pub const Scene = union(enum) {
     }
 };
 
-pub var currentScene: Scene = Scene{ .MenuScene = .{} };
+var currentScene: Scene = Scene{ .MenuScene = .{} };
+pub var nextScene: ?Scene = null;
 
 export fn start() void {}
 
 export fn update() void {
     rng.update();
+    if (nextScene) |s| {
+        currentScene = s;
+        nextScene = null;
+    }
     currentScene.update();
 }

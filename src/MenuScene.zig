@@ -18,7 +18,7 @@ pub fn update(s: *Self) void {
     s.selected = @mod(s.selected, 2);
     if (s.prevPad.b1() and !pad.b1()) {
         switch (s.selected) {
-            0 => main.currentScene = main.Scene{ .MainScene = MainScene.init(s.playSounds) },
+            0 => main.nextScene = main.Scene{ .MainScene = MainScene.init(s.playSounds) },
             1 => s.playSounds = !s.playSounds,
             else => unreachable,
         }
